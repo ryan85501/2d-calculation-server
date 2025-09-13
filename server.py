@@ -35,6 +35,17 @@ def commit_and_push():
         print("✅ Changes pushed to GitHub")
     except Exception as e:
         print(f"❌ Git push failed: {e}")
+# Update History
+history_table = soup.find("tbody", {"id": "history-table-body"})
+new_row = soup.new_tag("tr")
+new_row.string = f"<td>{date}</td><td>{am}</td><td>{pm}</td>"
+history_table.insert(0, new_row)
+
+# Update Calendar
+prev_results = soup.find("div", {"id": "previous-results-container"})
+new_div = soup.new_tag("div")
+new_div.string = result
+prev_results.append(new_div)
 
 
 # --- Calculation functions ---
@@ -152,6 +163,9 @@ schedule.every().wednesday.at("20:00").do(weekday_update)
 schedule.every().thursday.at("20:00").do(weekday_update)
 schedule.every().friday.at("20:00").do(weekday_update)
 schedule.every().sunday.at("17:00").do(sunday_update)
+schedule.every().day.at("12:01").do(update_am_result)
+schedule.every().day.at("16:30").do(update_pm_result)
+
 
 # Date change at 8:01PM (Mon–Fri)
 schedule.every().monday.at("20:01").do(update_date_task)
@@ -165,3 +179,4 @@ print("📌 Calculation server with date updater running...")
 while True:
     schedule.run_pending()
     time.sleep(30)
+
