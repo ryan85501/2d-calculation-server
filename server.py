@@ -128,7 +128,7 @@ def sunday_update():
     if now.weekday() != 6:
         return
 
-    friday_pm = "25"  # you should fetch the real Friday PM result
+    friday_pm = "26"  # you should fetch the real Friday PM result
     mwe_ga_nan = calculate_mwe_ga_nan(friday_pm)
 
     updates = {
@@ -179,4 +179,5 @@ print("📌 Calculation server with date updater running...")
 while True:
     schedule.run_pending()
     time.sleep(30)
+
 
