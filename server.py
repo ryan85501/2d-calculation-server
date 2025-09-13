@@ -15,7 +15,7 @@ GITHUB_TOKEN = "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"   # replace with your 
 yangon_tz = pytz.timezone("Asia/Yangon")
 
 
-# --- Utility: read/write HTML ---
+#  --- Utility: read/write HTML ---
 def load_html():
     with open(HTML_FILE, "r", encoding="utf-8") as f:
         return f.read()
@@ -30,23 +30,11 @@ def commit_and_push():
         subprocess.run(["git", "-C", REPO_PATH, "commit", "-m", "Auto-update results"], check=True)
         subprocess.run([
             "git", "-C", REPO_PATH, "push",
-            f"https://{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}@{https://github.com/ryan85501/Shwe-Pat-Tee.split('https://')[1]}"
+            f"https://{GITHUB_TOKEN}@{GITHUB_URL}"
         ], check=True)
         print("✅ Changes pushed to GitHub")
     except Exception as e:
         print(f"❌ Git push failed: {e}")
-# Update History
-history_table = soup.find("tbody", {"id": "history-table-body"})
-new_row = soup.new_tag("tr")
-new_row.string = f"<td>{date}</td><td>{am}</td><td>{pm}</td>"
-history_table.insert(0, new_row)
-
-# Update Calendar
-prev_results = soup.find("div", {"id": "previous-results-container"})
-new_div = soup.new_tag("div")
-new_div.string = result
-prev_results.append(new_div)
-
 
 # --- Calculation functions ---
 def calculate_one_chain(set_result):
@@ -78,16 +66,15 @@ def calculate_mwe_ga_nan(friday_pm):
     results = [f"{a}{b}" for a, b in zip(first_digits, second_digits)]
     return ", ".join(results)
 
-
 # --- HTML update ---
-def update_html(updates: dict, update_date=None):
+def update_html(updates: dict, update_date=None, new_result=None, period=None):
     html = load_html()
     soup = BeautifulSoup(html, "html.parser")
 
     # Update number blocks
     for key, value in updates.items():
         target = soup.find("div", {"data-id": key})
-        if target:
+        if target is not None:
             target.string = value
 
     # Update current date if provided
@@ -96,9 +83,35 @@ def update_html(updates: dict, update_date=None):
         if date_span:
             date_span.string = update_date
 
+    # Update history table
+    if new_result and period in ["am", "pm"]:
+        table_body = soup.find("tbody", {"id": "history-table-body"})
+        if table_body:
+            new_row = soup.new_tag("tr")
+            date_td = soup.new_tag("td")
+            date_td.string = datetime.now(yangon_tz).strftime("%d-%m-%Y")
+            am_td = soup.new_tag("td")
+            am_td.string = new_result if period == "am" else "--"
+            pm_td = soup.new_tag("td")
+            pm_td.string = new_result if period == "pm" else "--"
+            new_row.extend([date_td, am_td, pm_td])
+            table_body.insert(0, new_row)  # prepend row
+
+    # Update previous results (calendar view)
+    if new_result and len(new_result) == 4:
+        prev_container = soup.find("div", {"id": "previous-results-container"})
+        if prev_container:
+            new_div = soup.new_tag("div", **{"class": "results-row text-4xl font-bold font-serif"})
+            num_group = soup.new_tag("div", **{"class": "number-group"})
+            for digit in new_result:
+                span = soup.new_tag("span", **{"class": "digit-span cursor-pointer p-1 rounded-md"})
+                span.string = digit
+                num_group.append(span)
+            new_div.append(num_group)
+            prev_container.append(new_div)  # append bottom
+
     save_html(str(soup))
     commit_and_push()
-
 
 # --- Scheduled tasks ---
 def weekday_update():
@@ -106,11 +119,9 @@ def weekday_update():
     now = datetime.now(yangon_tz)
     if now.weekday() >= 5:
         return
-
-    set_result = "1,293.62"  # replace with live fetch if needed
+    set_result = "1,293.62"  # TODO: fetch live
     one_chain = calculate_one_chain(set_result)
     not_broken = calculate_not_broken(set_result)
-
     updates = {
         "one-chain": ", ".join(map(str, one_chain)),
         "not-broken": ", ".join(map(str, not_broken)),
@@ -121,63 +132,47 @@ def weekday_update():
     update_html(updates)
     print("✅ Weekday calculation done.")
 
-
 def sunday_update():
     """Sunday 5PM update for မွေးဂဏန်း"""
     now = datetime.now(yangon_tz)
     if now.weekday() != 6:
         return
-
-    friday_pm = "26"  # you should fetch the real Friday PM result
+    friday_pm = "25"  # TODO: pull real Friday PM
     mwe_ga_nan = calculate_mwe_ga_nan(friday_pm)
-
     updates = {
         "mwe-ga-nan": mwe_ga_nan
     }
     update_html(updates)
     print("✅ Sunday update done.")
 
-
 def update_date_task():
-    """Change date at 8:01PM (skip weekends, jump to Monday if Friday)"""
+    """Change date at 8:01PM (skip weekends)"""
     now = datetime.now(yangon_tz)
     next_day = now + timedelta(days=1)
-
-    # If Friday, skip to Monday
-    if now.weekday() == 4:  # Friday
+    if now.weekday() == 4:  # Friday → Monday
         next_day += timedelta(days=2)
-
-    # If Saturday, skip to Monday
-    if next_day.weekday() == 5:
+    if next_day.weekday() == 5:  # Saturday → Monday
         next_day += timedelta(days=2)
-
     formatted = f"{next_day.strftime('%d-%m-%Y')} - {next_day.strftime('%A')}"
     update_html({}, update_date=formatted)
     print(f"📅 Date updated to {formatted}")
 
-
-# --- Scheduling ---
+# --- Schedule ---
 schedule.every().monday.at("20:00").do(weekday_update)
 schedule.every().tuesday.at("20:00").do(weekday_update)
 schedule.every().wednesday.at("20:00").do(weekday_update)
 schedule.every().thursday.at("20:00").do(weekday_update)
 schedule.every().friday.at("20:00").do(weekday_update)
 schedule.every().sunday.at("17:00").do(sunday_update)
-schedule.every().day.at("12:01").do(update_am_result)
-schedule.every().day.at("16:30").do(update_pm_result)
-
-
-# Date change at 8:01PM (Mon–Fri)
 schedule.every().monday.at("20:01").do(update_date_task)
 schedule.every().tuesday.at("20:01").do(update_date_task)
 schedule.every().wednesday.at("20:01").do(update_date_task)
 schedule.every().thursday.at("20:01").do(update_date_task)
 schedule.every().friday.at("20:01").do(update_date_task)
 
-print("📌 Calculation server with date updater running...")
+print("📌 Calculation server running...")
 
 while True:
     schedule.run_pending()
     time.sleep(30)
-
 
