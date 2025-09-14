@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import pytz
 import schedule
 import time
+import requests
 from bs4 import BeautifulSoup
 
 # === CONFIG ===
@@ -137,7 +138,7 @@ def sunday_update():
     now = datetime.now(yangon_tz)
     if now.weekday() != 6:
         return
-    friday_pm = "25"  # TODO: pull real Friday PM
+    friday_pm = get_friday_pm_result() # TODO: pull real Friday PM
     mwe_ga_nan = calculate_mwe_ga_nan(friday_pm)
     updates = {
         "mwe-ga-nan": mwe_ga_nan
@@ -175,4 +176,5 @@ print("📌 Calculation server running...")
 while True:
     schedule.run_pending()
     time.sleep(30)
+
 
