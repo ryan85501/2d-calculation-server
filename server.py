@@ -120,7 +120,7 @@ def weekday_update():
     now = datetime.now(yangon_tz)
     if now.weekday() >= 5:
         return
-    set_result = "1,293.62"  # TODO: fetch live
+    set_result = fetch_set_result()  # TODO: fetch live
     one_chain = calculate_one_chain(set_result)
     not_broken = calculate_not_broken(set_result)
     updates = {
@@ -176,5 +176,6 @@ print("📌 Calculation server running...")
 while True:
     schedule.run_pending()
     time.sleep(30)
+
 
 
