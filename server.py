@@ -39,10 +39,7 @@ def commit_and_push():
     try:
         subprocess.run(["git", "-C", REPO_PATH, "add", "index.html"], check=True)
         subprocess.run(["git", "-C", REPO_PATH, "commit", "-m", "Auto-update results"], check=True)
-        subprocess.run([
-            "git", "-C", REPO_PATH, "push",
-            f"https://{GITHUB_TOKEN}@{GITHUB_REPO.split('https://')[1]}"
-        ], check=True)
+        subprocess.run(["git", "-C", REPO_PATH, "push",f"https://{GITHUB_TOKEN}@{GITHUB_REPO.split('https://')[1]}"], check=True)
         print("✅ Changes pushed to GitHub")
     except subprocess.CalledProcessError as e:
         print(f"❌ Git push failed: {e}")
@@ -226,4 +223,5 @@ print("📌 Calculation server running...")
 while True:
     schedule.run_pending()
     time.sleep(30)
+
 
