@@ -36,6 +36,34 @@ def commit_and_push():
         print("✅ Changes pushed to GitHub")
     except Exception as e:
         print(f"❌ Git push failed: {e}")
+ # --- Fetch live set/2D result from scraper ---
+def fetch_set_result():
+    try:
+        response = requests.get("https://set-scraper-server.onrender.com/get_set_data", timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        return data.get("set_result"), data.get("live_result")
+    except Exception as e:
+        print(f"⚠️ Error fetching set_result: {e}")
+        return None, None
+
+# --- AM update (12:01 PM) ---
+def update_am_result():
+    set_result, live_result = fetch_set_result()
+    if not live_result:
+        print("⚠️ No AM live result available.")
+        return
+    update_html({}, new_result=live_result, period="am")
+    print(f"✅ AM result updated: {live_result}")
+
+# --- PM update (4:30 PM) ---
+def update_pm_result():
+    set_result, live_result = fetch_set_result()
+    if not live_result:
+        print("⚠️ No PM live result available.")
+        return
+    update_html({}, new_result=live_result, period="pm")
+    print(f"✅ PM result updated: {live_result}")
 
 # --- Calculation functions ---
 def calculate_one_chain(set_result):
@@ -120,7 +148,8 @@ def weekday_update():
     now = datetime.now(yangon_tz)
     if now.weekday() >= 5:
         return
-    set_result = fetch_set_result()  # TODO: fetch live
+    set_result, _ = fetch_set_result()
+
     one_chain = calculate_one_chain(set_result)
     not_broken = calculate_not_broken(set_result)
     updates = {
@@ -170,12 +199,16 @@ schedule.every().tuesday.at("20:01").do(update_date_task)
 schedule.every().wednesday.at("20:01").do(update_date_task)
 schedule.every().thursday.at("20:01").do(update_date_task)
 schedule.every().friday.at("20:01").do(update_date_task)
+# AM/PM schedules
+schedule.every().day.at("12:01").do(update_am_result)
+schedule.every().day.at("16:30").do(update_pm_result)
 
 print("📌 Calculation server running...")
 
 while True:
     schedule.run_pending()
     time.sleep(30)
+
 
 
 
