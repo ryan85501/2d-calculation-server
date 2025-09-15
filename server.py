@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 REPO_PATH = "/app/repo"   # Path where your repo is cloned
 HTML_FILE = os.path.join(REPO_PATH, "index.html")  # Local file inside repo
 GITHUB_REPO = "https://github.com/ryan85501/Shwe-Pat-Tee.git"
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "your-token-here")  # Better to use env var
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")  # Better to use env var
 yangon_tz = pytz.timezone("Asia/Yangon")
 
 
@@ -226,3 +226,4 @@ print("📌 Calculation server running...")
 while True:
     schedule.run_pending()
     time.sleep(30)
+
