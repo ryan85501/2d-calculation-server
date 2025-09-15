@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 
 # === CONFIG ===
 REPO_PATH = "/app/repo"   # path where your repo is cloned
-HTML_FILE = f"https://github.com/ryan85501/Shwe-Pat-Tee/blob/main/index.html"
+HTML_FILE = HTML_FILE = os.path.join(REPO_PATH, "index.html")
 GITHUB_REPO = "https://github.com/ryan85501/Shwe-Pat-Tee.git"
 GITHUB_TOKEN = "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"   # replace with your token
 yangon_tz = pytz.timezone("Asia/Yangon")
@@ -29,10 +29,11 @@ def commit_and_push():
     try:
         subprocess.run(["git", "-C", REPO_PATH, "add", "index.html"], check=True)
         subprocess.run(["git", "-C", REPO_PATH, "commit", "-m", "Auto-update results"], check=True)
-        subprocess.run([
-            "git", "-C", REPO_PATH, "push",
-            f"https://{GITHUB_TOKEN}@{GITHUB_URL}"
-        ], check=True)
+       subprocess.run([
+    "git", "-C", REPO_PATH, "push",
+    f"https://{GITHUB_TOKEN}@{GITHUB_REPO.split('https://')[1]}"
+], check=True)
+
         print("✅ Changes pushed to GitHub")
     except Exception as e:
         print(f"❌ Git push failed: {e}")
@@ -149,7 +150,10 @@ def weekday_update():
     if now.weekday() >= 5:
         return
     set_result, _ = fetch_set_result()
-
+    
+    if not set_result:
+        print("⚠️ No set_result fetched.")
+        return
     one_chain = calculate_one_chain(set_result)
     not_broken = calculate_not_broken(set_result)
     updates = {
@@ -208,6 +212,7 @@ print("📌 Calculation server running...")
 while True:
     schedule.run_pending()
     time.sleep(30)
+
 
 
 
