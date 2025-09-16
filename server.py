@@ -10,8 +10,9 @@ import pytz
 # ---------------------------
 # Paths & GitHub Config
 # ---------------------------
-REPO_PATH = "/app/repo"   # path where your repo is cloned
-HTML_FILE = os.path.join(REPO_PATH, "index.html")  # Fixed: Local file path
+REPO_PATH = "/opt/render/project/src/repo"
+HTML_FILE = os.path.join(REPO_PATH, "index.html")
+
 
 GITHUB_REPO = "https://github.com/ryan85501/Shwe-Pat-Tee.git"
 GITHUB_USERNAME = "ryan85501"
@@ -189,3 +190,4 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(30)
+
