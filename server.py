@@ -224,7 +224,7 @@ schedule.every().tuesday.at("20:01").do(advance_date_job)
 schedule.every().wednesday.at("20:01").do(advance_date_job)
 schedule.every().thursday.at("20:01").do(advance_date_job)
 schedule.every().friday.at("20:01").do(advance_date_job)
-schedule.every().hour.do(recover_missed_jobs)  # recovery check
+schedule.every(5).minutes.do(recover_missed_jobs)  # recovery check
 
 
 # ---------------------------
@@ -235,3 +235,4 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(30)
+
