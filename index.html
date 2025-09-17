@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Numbers - Focused Celebration Effects</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Your original CSS remains unchanged */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .overflow-y-auto::-webkit-scrollbar {
+            display: none;
+        }
+        .overflow-y-auto {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .numbers-container {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            border-radius: 20px;
+            background-color: #ffcccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease-in-out;
+            margin-top: 20px;
+        }
+
+        .numbers-container.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .sub-numbers {
+            font-size: 32px;
+            font-weight: bold;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            color: #c0392b;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .flashing-number {
+            animation: flash-animation 1.5s infinite alternate;
+        }
+
+        @keyframes flash-animation {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        .history-table th, .history-table td {
+            padding: 10px 0;
+            border-bottom: 1px solid #dcdcdc;
+        }
+        .history-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .highlighted-row {
+            background-color: #ffeff2;
+            font-weight: bold;
+            border-left: 5px solid #d35400;
+        }
+
+        .highlighted-digit {
+            color: #ffbf00;
+            font-size: 1.2em;
+        }
+
+        .social-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: transparent;
+            padding: 0.5rem;
+            border-radius: 1rem;
+            box-shadow: none;
+            transition: all 0.3s ease-in-out;
+            transform: scale(1);
+        }
+        .social-button:hover {
+            background-color: transparent;
+            transform: scale(1.05);
+        }
+        .social-button:active {
+            transform: scale(0.98);
+        }
+
+        .social-button .social-icon {
+            font-size: 2rem;
+        }
+        .social-button .mt-1 {
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .calendar-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            background-color: transparent;
+            border-radius: 9999px;
+            color: #2c3e50;
+            transition: transform 0.2s ease-in-out, background-color 0.2s ease-in-out;
+        }
+
+        .calendar-button:hover {
+            transform: scale(1.1);
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .shining-digit {
+            animation: shine 1.5s infinite;
+        }
+
+        @keyframes shine {
+            0% { color: #ffbf00; text-shadow: 0 0 5px #ffbf00; }
+            50% { color: #ffffa0; text-shadow: 0 0 10px #ffffa0; }
+            100% { color: #ffbf00; text-shadow: 0 0 5px #ffbf00; }
+        }
+        
+        .results-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+        }
+        
+        .results-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+        }
+
+        .number-group {
+            display: flex;
+            flex-direction: row;
+            gap: 0.5rem;
+        }
+        
+        .result-group {
+            position: absolute;
+            right: 1rem;
+            transition: top 0.3s ease-in-out;
+        }
+        
+        .selected-digit {
+            background-color: #ffeb3b;
+            border-radius: 5px;
+            padding: 0 2px;
+            animation: highlight-pulse 0.5s infinite alternate;
+        }
+        
+        @keyframes highlight-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(1.05); opacity: 0.8; }
+        }
+
+        .calculator-buttons-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem;
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+        }
+
+        .cute-button {
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-radius: 100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        .cute-button:hover {
+            transform: scale(1.1);
+        }
+
+        .cute-button:active {
+            transform: scale(0.95);
+        }
+        
+        .button-plus { background-color: #48bb78; }
+        .button-minus { background-color: #ed8936; }
+        .button-multiply { background-color: #4299e1; }
+        .button-divide { background-color: #9f7aea; }
+        .button-equals { background-color: #4c51bf; }
+        .button-clear { background-color: #e53e3e; }
+        .button-back { background-color: #9ca3af; }
+
+        .result-number {
+            background-color: #fff59d;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .social-buttons-container {
+            display: flex;
+            flex-direction: row;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .live-result-container {
+            position: relative;
+            background-image: linear-gradient(to bottom, #ffebee, #ffcdd2);
+            padding: 2rem 1.5rem;
+            border-radius: 2rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .live-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .live-result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #d32f2f;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .cute-icon {
+            font-size: 1.5rem;
+            color: #e57373;
+            animation: heart-beat 1s infinite;
+        }
+
+        @keyframes heart-beat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .live-result-number {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #d32f2f;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: pulse 2s infinite;
+            transition: all 0.3s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .live-result-sub-text {
+            color: #7f8c8d;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .live-result-details {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 1rem;
+            gap: 1rem;
+        }
+
+        .live-result-detail-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            padding: 0.75rem 1.25rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .live-result-detail-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.875rem;
+        }
+
+        .live-result-detail-value {
+            font-weight: bold;
+            font-size: 1.25rem;
+            color: #d32f2f;
+            margin-top: 0.25rem;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #d35400;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Hide the API status element */
+        #api-status {
+            display: none !important;
+        }
+        
+        /* Subtle celebration effects only for the live result container */
+        .live-celebration {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+        
+        .celebration-emoji {
+            position: absolute;
+            font-size: 1.5rem;
+            z-index: 10;
+            animation: celebration-float 4s forwards;
+            opacity: 0;
+        }
+        
+        @keyframes celebration-float {
+            0% {
+                transform: translateY(0) translateX(0) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-80px) translateX(20px) scale(1.2);
+                opacity: 0;
+            }
+        }
+        
+        .winning-glow {
+            animation: winning-glow-animation 2s infinite;
+        }
+        
+        @keyframes winning-glow-animation {
+            0% {
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 relative">
+
+    <div class="flex flex-col items-center w-full max-w-7xl mx-auto gap-4">
+        
+        <button id="calendar-btn" class="calendar-button">
+            <i class="far fa-calendar-alt text-5xl sm:text-7xl"></i>
+        </button>
+
+        <div id="lucky-numbers-view" class="w-full flex flex-col items-center gap-4">
+            
+            <div class="text-center mb-4">
+                <div class="text-3xl font-bold mb-2">Date - <span id="current-date"></span></div>
+                <div class="text-xl font-medium text-gray-600">All DAY</div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full">
+                <button class="button-block bg-pink-100 hover:bg-pink-200 text-orange-600 p-4 rounded-2xl shadow-md transition-all duration-300 transform hover:scale-105 active:scale-98" data-target="mwe-ga-nan">
+                    <span class="text-3xl">🍀</span>
+                    <span class="text-base font-bold mt-1">မွေးဂဏန်း</span>
+                </button>
+                <button class="button-block bg-pink-100 hover:bg-pink-200 text-orange-600 p-4 rounded-2xl shadow-md transition-all duration-300 transform hover:scale-105 active:scale-98" data-target="one-kwet">
+                    <span class="text-3xl">🎯</span>
+                    <span class="text-base font-bold mt-1">တစ်ကွက်ကောင်း</span>
+                </button>
+                <button class="button-block bg-pink-100 hover:bg-pink-200 text-orange-600 p-4 rounded-2xl shadow-md transition-all duration-300 transform hover:scale-105 active:scale-98" data-target="shwe-pat-tee">
+                    <span class="text-3xl">💰</span>
+                    <span class="text-base font-bold mt-1">ရွှေပတ်သီး</span>
+                </button>
+                <button class="button-block bg-pink-100 hover:bg-pink-200 text-orange-600 p-4 rounded-2xl shadow-md transition-all duration-300 transform hover:scale-105 active:scale-98" data-target="not-broken">
+                    <span class="text-3xl">🔑</span>
+                    <span class="text-base font-bold mt-1">ရွှေကီး</span>
+                </button>
+                <button class="button-block bg-pink-100 hover:bg-pink-200 text-orange-600 p-4 rounded-2xl shadow-md transition-all duration-300 transform hover:scale-105 active:scale-98" data-target="one-chain">
+                    <span class="text-3xl">⛓️</span>
+                    <span class="text-base font-bold mt-1">ဝမ်းချိန်း</span>
+                </button>
+                <button class="button-block bg-pink-100 hover:bg-pink-200 text-orange-600 p-4 rounded-2xl shadow-md transition-all duration-300 transform hover:scale-105 active:scale-98" data-target="punch">
+                    <span class="text-3xl">💥</span>
+                    <span class="text-base font-bold mt-1">ထိုးကွက်</span>
+                </button>
+            </div>
+
+            <div id="numbers-display" class="numbers-container">
+                <div id="numbers-content" class="sub-numbers">
+                    </div>
+            </div>
+
+            <div id="number-data" class="hidden">
+                <div data-id="mwe-ga-nan">05, 27, 83, 16, 49</div>
+                <div data-id="one-kwet">80</div>
+                <div data-id="shwe-pat-tee">8</div>
+                <div data-id="not-broken">7, 8, 9</div>
+                <div data-id="one-chain">0, 9</div>
+                <div data-id="punch">81, 82, 89, 40 ,41 ,42,47 ,49 </div>
+            </div> 
+
+            <!-- API Status Indicator (hidden) -->
+            <div id="api-status" class="api-status" style="display: none;"></div>
+            
+            <div id="live-result" class="live-result-container">
+                <!-- Celebration container for emojis -->
+                <div id="celebration-container" class="live-celebration"></div>
+                
+                <div class="live-result-header">
+                    <div class="live-result-title">2D Live Result</div>
+                    <i class="fas fa-heart cute-icon"></i>
+                </div>
+                <div id="live-result-content">
+                    <div id="live-result-number" class="live-result-number">--</div>
+
+                    <div class="live-result-detail-item">
+               <span class="live-result-detail-label">TIME</span>
+               <span id="live-result-time" class="live-result-detail-value">--</span>
+               </div>
+                    <div class="live-result-details">
+                        <div class="live-result-detail-item">
+                            <span class="live-result-detail-label">SET</span>
+                            <span id="set-result-value" class="live-result-detail-value">--</span>
+                        </div>
+                        <div class="live-result-detail-item">
+                            <span class="live-result-detail-label">VALUE</span>
+                            <span id="live-result-value-text" class="live-result-detail-value">--</span>
+                        </div>
+                    </div>
+                </div>
+                <div id="live-result-sub-text" class="live-result-sub-text">Loading...</div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-md w-full mt-8">
+                <div class="text-2xl font-bold mb-4 text-center text-gray-800">2D Results History</div>
+                <div class="overflow-x-auto">
+                    <table id="history-table" class="w-full text-center border-collapse">
+                        <thead>
+                            <tr class="text-gray-500 text-sm">
+                                <th class="py-2">Date</th>
+                                <th class="py-2">AM</th>
+                                <th class="py-2">PM</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body" class="text-lg font-medium text-gray-700">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        
+        
+        
+        <div class="social-buttons-container flex flex-row gap-6 justify-center items-center">
+
+              <a href="https://www.youtube.com/@2dshwepattee?si=KYIfOzw5lLajvCvE" target="_blank" onclick="openExternalUrl(this.href); return false;" class="social-button text-red-600" rel="noopener noreferrer">
+                    <i class="fab fa-youtube social-icon"></i>
+                    <span class="text-red-600 mt-1">YouTube Channel</span>
+                </a>
+
+                <a href="https://www.facebook.com/share/1QxT8tKtjh/" target="_blank" onclick="openExternalUrl(this.href); return false;" class="social-button text-blue-600" rel="noopener noreferrer">
+                    <i class="fab fa-facebook social-icon"></i>
+                    <span class="text-blue-700 mt-1">Facebook Page</span>
+                </a>
+            </div>
+         <div class="mt-4 text-center">
+                <p class="text-xl font-semibold text-red-800 popping-text">Wave Account - 09777662003</p>
+            </div>
+            </div>
+
+        
+        <div id="calendar-view" class="w-full h-full flex flex-col items-center md:p-8 bg-white rounded-xl shadow-md gap-8" style="display: none;">
+            
+            <div class="w-full flex flex-col items-center">
+                <h2 class="text-3xl font-bold mb-4 text-center">Previous Results</h2>
+                <p class="text-gray-600 mb-4 text-center">Tap two digits and an operator to calculate the sum.</p>
+                <div id="previous-results-container" class="results-container w-full p-4 border rounded-lg">
+                    </div>
+                
+                <div class="flex justify-center gap-4 mt-4">
+                    <button id="back-to-main-btn" class="flex items-center justify-center gap-2 py-2 px-4 bg-gray-500 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-gray-600 transition-colors duration-300">
+                        <i class="fas fa-arrow-left"></i>
+                        Back to Main
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="calculator-panel" class="calculator-buttons-container" style="display: none;">
+            <button class="cute-button button-plus" data-value="+"><i class="fas fa-plus"></i></button>
+            <button class="cute-button button-minus" data-value="-"><i class="fas fa-minus"></i></button>
+            <button class="cute-button button-multiply" data-value="*"><i class="fas fa-times"></i></button>
+            <button class="cute-button button-divide" data-value="/"><i class="fas fa-divide"></i></button>
+            <button class="cute-button button-equals" data-value="=">=</button>
+            <button class="cute-button button-back" data-value="back"><i class="fas fa-arrow-left"></i></button>
+            <button class="cute-button button-clear" data-value="clear"><i class="fas fa-trash-alt"></i></button>
+        </div>
+    </div>
+    
+    <script>
+        // Function to handle opening external links
+        function openExternalUrl(url) {
+            if (typeof Android !== "undefined" && Android.openExternalLink) {
+                Android.openExternalLink(url);
+            } else {
+                // Fallback for web browsers
+                window.open(url, '_blank');
+            }
+        }
+        
+        // Celebration emojis
+        const celebrationEmojis = ['🎉', '🎊', '🥳', '🎁', '✨', '💫', '👏', '👍', '🏆', '⭐'];
+        
+        // Function to create subtle celebration effects only in the live result container
+        function createLiveResultCelebration() {
+            const celebrationContainer = document.getElementById('celebration-container');
+            celebrationContainer.innerHTML = '';
+            
+            // Add a golden glow to the live result container
+            const liveResultContainer = document.getElementById('live-result');
+            liveResultContainer.classList.add('winning-glow');
+            
+            // Add a few emojis (not too many to avoid crowding)
+            for (let i = 0; i < 5; i++) {
+                const emoji = document.createElement('div');
+                emoji.className = 'celebration-emoji';
+                emoji.textContent = celebrationEmojis[Math.floor(Math.random() * celebrationEmojis.length)];
+                emoji.style.left = `${20 + (i * 15)}%`;
+                emoji.style.animationDelay = `${i * 0.2}s`;
+                celebrationContainer.appendChild(emoji);
+            }
+            
+            // Remove the glow after 3 seconds
+            setTimeout(() => {
+                liveResultContainer.classList.remove('winning-glow');
+            }, 3000);
+        }
+        
+        // Function to check if live result matches any numbers
+        function checkForMatches(liveResult) {
+            // Get numbers from data elements
+            const shwePatTee = document.querySelector('[data-id="shwe-pat-tee"]').textContent.trim();
+            const mweGaNan = document.querySelector('[data-id="mwe-ga-nan"]').textContent.split(',').map(num => num.trim());
+            const punch = document.querySelector('[data-id="punch"]').textContent.split(',').map(num => num.trim());
+            
+            let hasMatch = false;
+            
+            // Check if live result contains shwe-pat-tee number (2)
+            if (liveResult.includes(shwePatTee)) {
+                hasMatch = true;
+            }
+            
+            // Check if live result matches any mwe-ga-nan numbers
+            if (mweGaNan.includes(liveResult)) {
+                hasMatch = true;
+            }
+            
+            // Check if live result matches any punch numbers
+            if (punch.includes(liveResult)) {
+                hasMatch = true;
+            }
+            
+            return hasMatch;
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // View containers
+            const luckyNumbersView = document.getElementById('lucky-numbers-view');
+            const calendarView = document.getElementById('calendar-view');
+            // Buttons and panels
+            const calendarBtn = document.getElementById('calendar-btn');
+            const backToMainBtn = document.getElementById('back-to-main-btn');
+            const blockButtons = document.querySelectorAll('.button-block');
+            const calculatorPanel = document.getElementById('calculator-panel');
+            const calculatorButtons = calculatorPanel.querySelectorAll('.cute-button');
+            // Main content areas
+            const previousResultsContainer = document.getElementById('previous-results-container');
+            const numbersDisplayContainer = document.getElementById('numbers-display');
+            const numbersContent = document.getElementById('numbers-content');
+            const apiStatus = document.getElementById('api-status');
+            
+            // New elements for live results
+            const liveResultContent = document.getElementById('live-result-content');
+            const liveResultNumber = document.getElementById('live-result-number');
+            const liveResultSubText = document.getElementById('live-result-sub-text');
+            const setResultValue = document.getElementById('set-result-value');
+            const liveResultValueText = document.getElementById('live-result-value-text');
+            const liveResultTime = document.getElementById('live-result-time');
+
+            // Calculator state variables
+            let selectedDigits = [];
+            let operator = null;
+
+            // Global variable to store the last clicked button
+            let lastClickedButton = null;
+            
+            // Variables to hold static results
+            let amResult = null;
+            let pmResult = null;
+
+            // History data structure to store results.
+            let history = [
+                { date: '17-09-2025', day: 'Wednesday', am: '65', pm: '98' , highlight: true },
+                { date: '16-09-2025', day: 'Tuesday', am: '85', pm: '95' , highlight: true },
+                { date: '15-09-2025', day: 'Monday', am: '02', pm: '80' },
+                { date: '12-09-2025', day: 'Friday', am: '39', pm: '26' , highlight: true },
+                { date: '11-09-2025', day: 'Thursday', am: '15', pm: '33' },
+                
+                ];
+            
+            // Data for the calendar view from the provided image
+            const previousResults = [
+                '7855', '3727', '5097', '5050', '6483', '9540',
+                '9250', '5236', '7608', '9160', '8672', '6359',
+                '0572', '1137', '8478', '2520', '0519', '5760',
+                '2737', '0490', '7499', '1678', '0468', '7198', '7715',
+                '0172', '9065', '7886', '4784', '6717', '2253', '2607',
+                '5216', '1684', '8752', '1533', '3926', '0280', '8595',
+                '6598'
+            ];
+
+            // Function to fetch and display live 2D result - FIXED VERSION
+            const fetchLiveResult = async () => {
+                const apiUrl = 'https://set-scraper-server.onrender.com/get_set_data';
+
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    if (data && data.live_result !== undefined) {
+                        updateLiveResultDisplay(data);
+                    } else {
+                        throw new Error('Invalid data format from API');
+                    }
+                } catch (error) {
+                    console.error('Error fetching live data:', error);
+                    updateLiveResultDisplay({
+                        live_result: 'N/A',
+                        set_result: '--',
+                        value: '--',
+                        time: '--'
+                    });
+                    liveResultSubText.textContent = '';
+                }
+            };
+            
+            const updateLiveResultDisplay = (data) => {
+                // Update the DOM elements with the API data
+                liveResultNumber.textContent = data.live_result || '--';
+                setResultValue.textContent = data.set_result || '--';
+                liveResultValueText.textContent = data.value || '--';
+                liveResultTime.textContent = data.time || '--';
+                
+                liveResultContent.style.display = 'block';
+                liveResultSubText.textContent = '';
+                
+                // Check for matches and trigger celebration if found
+                if (data.live_result && data.live_result !== '--' && data.live_result !== 'N/A') {
+                    if (checkForMatches(data.live_result)) {
+                        createLiveResultCelebration();
+                    }
+                }
+                
+                const now = new Date();
+                const hours = now.getHours();
+                const minutes = now.getMinutes();
+
+                // 12:01 PM → AM result
+                 if (hours === 12 && minutes === 1) {
+                updateHistoryAndCalendar('am', data.live_result);
+    }
+
+                 // 4:30 PM → PM result
+               if (hours === 16 && minutes === 30) {
+             updateHistoryAndCalendar('pm', data.live_result);
+    }
+            };
+            
+            // Function to update history and calendar (placeholder)
+            function updateHistoryAndCalendar(type, result) {
+                console.log(`Updating ${type} result to: ${result}`);
+            }
+
+            // Function to format the current date
+            const formatDate = (date) => {
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`;
+            };
+
+            // Function to update the current date and day of the week
+            const updateCurrentDate = () => {
+                const date = new Date();
+                const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
+                document.getElementById('current-date').textContent = `${formatDate(date)} - ${dayOfWeek}`;
+            };
+
+            // Function to dynamically update the history table
+            const updateHistoryTable = () => {
+                const historyTableBody = document.getElementById('history-table-body');
+                historyTableBody.innerHTML = ''; // Clear existing rows
+                
+                history.forEach(entry => {
+                    const row = document.createElement('tr');
+                    let amContent = entry.am;
+                    let pmContent = entry.pm;
+                    let rowClasses = '';
+
+                    // Check if the entry should be highlighted
+                    if (entry.highlight) {
+                        rowClasses = 'highlighted-row';
+
+                        // Highlight specific digits based on the winning number
+                        if (amContent === '85') {
+                            amContent = `<span class="shining-digit">85</span>`;
+                        } 
+                           
+                        
+                        else if  (pmContent === '26') {
+                            pmContent = `<span class="shining-digit">26</span>`;
+                        }
+
+                        else if  (pmContent === '98') {
+                            pmContent = `<span class="shining-digit">98</span>`;
+                        }
+                       
+                    }
+
+                    row.className = rowClasses;
+                    row.innerHTML = `
+                        <td class="py-2">${entry.date}</td>
+                        <td class="py-2 text-red-500 font-bold">${amContent}</td>
+                        <td class="py-2 text-blue-500 font-bold">${pmContent}</td>
+                    `;
+                    historyTableBody.appendChild(row);
+                });
+            };
+            
+            // Function to show the content associated with a button
+            const showContent = (button) => {
+                const targetId = button.dataset.target;
+                const numbersSourceElement = document.querySelector(`#number-data div[data-id="${targetId}"]`);
+                
+                if (!numbersSourceElement) {
+                    console.error('Numbers not found for target:', targetId);
+                    return;
+                }
+
+                // Split the text content into an array of numbers
+                const numbersText = numbersSourceElement.textContent;
+                const numbersArray = numbersText.split(',').map(s => s.trim());
+
+                numbersContent.innerHTML = ''; // Clear existing content
+                
+                numbersArray.forEach(num => {
+                    const span = document.createElement('span');
+                    span.textContent = num;
+                    span.className = 'flashing-number px-2';
+                    numbersContent.appendChild(span);
+                });
+
+                numbersDisplayContainer.classList.add('active');
+            };
+            
+            // Function to populate the calendar view with the previous results
+            const populateCalendarView = () => {
+                previousResultsContainer.innerHTML = ''; // Clear existing content
+                
+                previousResults.forEach((numString, rowIndex) => {
+                    const resultsRow = document.createElement('div');
+                    resultsRow.className = 'results-row text-4xl font-bold font-serif';
+                    resultsRow.dataset.row = rowIndex; // Assign a data attribute to keep track of the row index
+                    
+                    const numberGroup = document.createElement('div');
+                    numberGroup.className = 'number-group';
+                    resultsRow.appendChild(numberGroup);
+
+                    // Split the string into individual digits
+                    const digits = numString.split('');
+
+                    digits.forEach(digit => {
+                        const span = document.createElement('span');
+                        span.textContent = digit;
+                        span.className = 'digit-span cursor-pointer p-1 rounded-md transition-colors duration-200 hover:bg-gray-200';
+                        
+                        // Check for the shining number and apply the special class
+                        if (numString === '1678' && digit === '8') {
+                            span.classList.add('shining-digit');
+                        }
+
+                        // Add event listener to each digit
+                        span.addEventListener('click', () => {
+                            // Find the index of the clicked element in the selectedDigits array
+                            const index = selectedDigits.findIndex(d => d.element === span);
+                            
+                            if (index > -1) {
+                                // If the digit is already selected, deselect it
+                                selectedDigits.splice(index, 1);
+                                span.classList.remove('selected-digit');
+                            } else if (selectedDigits.length < 2) {
+                                // If not selected and we have space, select it
+                                selectedDigits.push({ value: parseInt(digit), element: span, row: resultsRow });
+                                span.classList.add('selected-digit');
+                            }
+                        });
+
+                        numberGroup.appendChild(span);
+                    });
+                    
+                    previousResultsContainer.appendChild(resultsRow);
+                });
+            };
+
+            // Function to perform the calculation and display the result
+            const calculateResult = () => {
+                // Only proceed if two digits and an operator are selected
+                if (selectedDigits.length < 2 || !operator) {
+                    return;
+                }
+                
+                // Get the values
+                const firstDigit = selectedDigits[0].value;
+                const secondDigit = selectedDigits[1].value;
+                
+                let result = 0;
+                let calculationSuccess = true;
+
+                switch (operator) {
+                    case '+': result = firstDigit + secondDigit; break;
+                    case '-': result = firstDigit - secondDigit; break;
+                    case '*': result = firstDigit * secondDigit; break;
+                    case '/': 
+                        if (secondDigit === 0) {
+                            result = 'Error'; // Handle division by zero
+                            calculationSuccess = false;
+                        } else {
+                            result = firstDigit / secondDigit;
+                        }
+                        break;
+                }
+
+                // If the calculation was successful, get the last digit
+                if (calculationSuccess) {
+                    // Check if the result is a number before getting the last digit
+                    if (typeof result === 'number') {
+                        // Use Math.floor to get the integer part before getting the last digit
+                        result = Math.floor(Math.abs(result)) % 10;
+                    }
+                }
+
+                // Create the result element
+                const resultElement = document.createElement('div');
+                resultElement.className = 'result-group';
+                resultElement.innerHTML = `<span class="result-number">${result}</span>`;
+                
+                // Get the second selected row to position the result
+                const secondSelectedRow = selectedDigits[1].row;
+                const containerRect = previousResultsContainer.getBoundingClientRect();
+                const rowRect = secondSelectedRow.getBoundingClientRect();
+                
+                // Calculate the top position relative to the container
+                const topOffset = rowRect.top - containerRect.top;
+                
+                // Set the position and append to the container
+                resultElement.style.top = `${topOffset}px`;
+                previousResultsContainer.appendChild(resultElement);
+                
+                // Reset operator and selected digits for the next calculation
+                selectedDigits = [];
+                operator = null;
+            };
+
+            // Function to clear all highlights and results
+            const clearCalculation = () => {
+                // Remove all highlights
+                document.querySelectorAll('.selected-digit').forEach(el => {
+                    el.classList.remove('selected-digit');
+                });
+                // Remove all result elements
+                document.querySelectorAll('.result-group').forEach(el => {
+                    el.remove();
+                });
+                selectedDigits = [];
+                operator = null;
+            };
+
+            // Event listener for the calculator buttons
+            calculatorButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const value = button.dataset.value;
+                    
+                    if (value === 'clear') {
+                        clearCalculation();
+                    } else if (value === '=') {
+                        calculateResult();
+                    } else if (value === 'back') {
+                        // Trigger the click event on the back-to-main button
+                        backToMainBtn.click();
+                    } else {
+                        // It's an operator
+                        operator = value;
+                    }
+                });
+            });
+            
+            // This function is now called from the Android app after the ad finishes.
+            window.showContentFromApp = (buttonId) => {
+                const button = document.querySelector(`.button-block[data-target="${buttonId}"]`);
+                if (button) {
+                    showContent(button);
+                } else {
+                    console.error("Button not found with ID:", buttonId);
+                }
+            };
+
+            // Handle button clicks
+            blockButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const buttonId = button.dataset.target;
+                    if (typeof Android !== "undefined" && Android.triggerRewardAd) {
+                        Android.triggerRewardAd(buttonId);  // Pass buttonId to Kotlin
+                    } else {
+                        // Fallback for browser
+                        showContent(button);
+                    }
+                });
+            });
+
+            // Event listeners for view switching
+            calendarBtn.addEventListener('click', () => {
+                luckyNumbersView.style.display = 'none';
+                calendarView.style.display = 'block';
+                calculatorPanel.style.display = 'flex';
+                populateCalendarView();
+                clearCalculation(); // Ensure a clean state when switching to the calculator
+            });
+
+            backToMainBtn.addEventListener('click', () => {
+                calendarView.style.display = 'none';
+                calculatorPanel.style.display = 'none';
+                luckyNumbersView.style.display = 'flex';
+                clearCalculation(); // Clear state when leaving the calendar view
+            });
+            
+            // Initial setup on page load
+          
+            updateHistoryTable();
+            
+            // Fetch live result on page load and every 1 second (1000ms)
+            fetchLiveResult();
+            setInterval(fetchLiveResult, 1000);
+        });
+    </script>
+</body>
+</html>
