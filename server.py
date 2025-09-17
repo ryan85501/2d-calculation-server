@@ -1,7 +1,6 @@
 import os
 import schedule
 import time
-import random
 import subprocess
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
@@ -11,12 +10,12 @@ import requests
 # ---------------------------
 # Paths & GitHub Config
 # ---------------------------
-REPO_PATH = "/opt/render/project/src/repo"
+REPO_PATH = "/opt/render/project/src"   # fixed path
 HTML_FILE = os.path.join(REPO_PATH, "index.html")
 
 GITHUB_REPO = "https://github.com/ryan85501/Shwe-Pat-Tee.git"
 GITHUB_USERNAME = "ryan85501"
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "your-token-here")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "YOUR_TOKEN_HERE")   # use env var
 GITHUB_URL = GITHUB_REPO.replace("https://", f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@")
 
 yangon_tz = pytz.timezone("Asia/Yangon")
@@ -47,26 +46,62 @@ def get_today_str():
     now = datetime.now(yangon_tz)
     return now.strftime("%d-%m-%Y")
 
-def get_next_day(skip_weekends=True):
+def get_next_day_str(skip_weekends=True):
     now = datetime.now(yangon_tz)
     next_day = now + timedelta(days=1)
     if skip_weekends and next_day.weekday() == 5:  # Saturday
         next_day += timedelta(days=2)
     elif skip_weekends and next_day.weekday() == 6:  # Sunday
         next_day += timedelta(days=1)
-    return next_day
+    return next_day.strftime("%d-%m-%Y")
 
 # ---------------------------
-# Fetch Live Data from Scraper
+# Fetch Set Result
 # ---------------------------
-def fetch_live_results():
+def fetch_set_result():
     try:
-        response = requests.get("https://set-scraper-server.onrender.com/get_set_data", timeout=10)
-        response.raise_for_status()
-        return response.json()
+        resp = requests.get("https://set-scraper-server.onrender.com/get_set_data", timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("set_result"), data.get("live_result")
     except Exception as e:
-        print(f"❌ Error fetching live results: {e}")
-        return {}
+        print(f"⚠️ Error fetching set result: {e}")
+        return None, None
+
+# ---------------------------
+# Custom Calculation Methods
+# ---------------------------
+def calculate_one_chain(set_result: str):
+    """From PM result decimals"""
+    set_str = set_result.replace(",", "")
+    if "." not in set_str:
+        return []
+    decimals = set_str.split(".")[1]
+    if len(decimals) < 2:
+        return []
+    d1, d2 = int(decimals[-2]), int(decimals[-1])
+    s = d1 + d2
+    return [s - 1, s]
+
+def calculate_not_broken(set_result: str):
+    """From PM result integer part"""
+    set_str = set_result.replace(",", "")
+    integer = set_str.split(".")[0]
+    if len(integer) < 2:
+        return []
+    d1, d2 = int(integer[-2]), int(integer[-1])
+    s = d1 + d2
+    last = s % 10
+    return [last - 1, last, last + 1]
+
+def calculate_mwe_ga_nan(friday_pm: str):
+    """From Friday PM result"""
+    first = int(friday_pm[0])
+    second = int(friday_pm[1])
+    first_digits = [(first + x) % 10 for x in [0, 2, 4, 6, 8]]
+    second_digits = [(second + y) % 10 for y in [1, 3, 5, 7, 9]]
+    results = [f"{a}{b}" for a, b in zip(first_digits, second_digits)]
+    return results
 
 # ---------------------------
 # HTML Update Function
@@ -75,14 +110,14 @@ def update_html(updates=None, new_result=None, period=None, advance_date=False):
     git_pull()
     soup = load_html()
 
-    # Update calculation blocks
+    # Update divs
     if updates:
         for key, value in updates.items():
             target = soup.select_one(f'div[data-id="{key}"]')
             if target:
-                target.string = ", ".join(value) if isinstance(value, list) else value
+                target.string = ", ".join(map(str, value)) if isinstance(value, list) else str(value)
 
-    # Update AM/PM results
+    # Update history table + previous results
     if new_result and period in ["am", "pm"]:
         history_table = soup.select_one("#history-table-body")
         today = get_today_str()
@@ -107,7 +142,6 @@ def update_html(updates=None, new_result=None, period=None, advance_date=False):
         elif period == "pm":
             tds[2].string = new_result
 
-        # Update Previous Results Calendar
         prev_container = soup.select_one("#previous-results-container")
         if prev_container:
             result_row = soup.new_tag("div")
@@ -117,19 +151,18 @@ def update_html(updates=None, new_result=None, period=None, advance_date=False):
             for digit in new_result:
                 span = soup.new_tag("span")
                 span.string = digit
-                span["class"] = "digit-span p-1"
+                span["class"] = "digit-span cursor-pointer p-1 rounded-md"
                 number_group.append(span)
             result_row.append(number_group)
             prev_container.append(result_row)
 
-    # Update Date
+    # Update date
     if advance_date:
         date_span = soup.select_one("#current-date")
         if date_span:
-            next_day = get_next_day(skip_weekends=True)
-            formatted_date = next_day.strftime("%d-%m-%Y")
-            formatted_day = next_day.strftime("%A")
-            date_span.string = f"{formatted_date} - {formatted_day}"
+            next_date = get_next_day_str(skip_weekends=True)
+            day_of_week = datetime.strptime(next_date, "%d-%m-%Y").strftime("%A")
+            date_span.string = f"{next_date} - {day_of_week}"
 
     save_html(soup)
     git_push()
@@ -138,21 +171,24 @@ def update_html(updates=None, new_result=None, period=None, advance_date=False):
 # Scheduled Jobs
 # ---------------------------
 def update_am_result():
-    data = fetch_live_results()
-    result = data.get("AM", str(random.randint(0, 99)).zfill(2))
-    update_html(new_result=result, period="am")
-    print(f"✅ AM result updated: {result}")
+    _, live_result = fetch_set_result()
+    if live_result:
+        update_html(new_result=live_result, period="am")
+        print(f"✅ AM result updated: {live_result}")
 
 def update_pm_result():
-    data = fetch_live_results()
-    result = data.get("PM", str(random.randint(0, 99)).zfill(2))
-    update_html(new_result=result, period="pm")
-    print(f"✅ PM result updated: {result}")
+    set_result, live_result = fetch_set_result()
+    if live_result:
+        update_html(new_result=live_result, period="pm")
+        print(f"✅ PM result updated: {live_result}")
 
 def weekday_evening_update():
+    set_result, _ = fetch_set_result()
+    if not set_result:
+        return
     updates = {
-        "one-chain": [str(random.randint(0, 9)) for _ in range(2)],
-        "not-broken": [str(random.randint(0, 9)) for _ in range(3)],
+        "one-chain": calculate_one_chain(set_result),
+        "not-broken": calculate_not_broken(set_result),
         "one-kwet": "",
         "shwe-pat-tee": "",
         "punch": ""
@@ -161,50 +197,40 @@ def weekday_evening_update():
     print("🌙 Weekday evening update done.")
 
 def sunday_update():
-    updates = {"mwe-ga-nan": [str(random.randint(0, 99)).zfill(2) for _ in range(5)]}
+    friday_pm = "23"  # TODO: fetch actual Friday PM result
+    updates = {"mwe-ga-nan": calculate_mwe_ga_nan(friday_pm)}
     update_html(updates=updates)
     print("☀️ Sunday Mwe Ga Nan updated.")
 
 def advance_date_job():
-    next_day = get_next_day(skip_weekends=True)
-    formatted_date = next_day.strftime("%d-%m-%Y")
-    formatted_day = next_day.strftime("%A")
     update_html(advance_date=True)
-    print(f"📅 Date advanced to {formatted_date} - {formatted_day}")
+    print("📅 Date advanced for next draw.")
 
 # ---------------------------
-# Scheduler Setup (UTC times for Render)
+# Scheduler Setup
 # ---------------------------
-schedule.every().day.at("05:31").do(update_am_result)   # 12:01 PM Yangon
-schedule.every().day.at("10:00").do(update_pm_result)   # 4:30 PM Yangon
+schedule.every().day.at("12:01").do(update_am_result)
+schedule.every().day.at("16:30").do(update_pm_result)
 
-schedule.every().monday.at("13:30").do(weekday_evening_update)
-schedule.every().tuesday.at("13:30").do(weekday_evening_update)
-schedule.every().wednesday.at("13:30").do(weekday_evening_update)
-schedule.every().thursday.at("13:30").do(weekday_evening_update)
-schedule.every().friday.at("13:30").do(weekday_evening_update)
+schedule.every().monday.at("20:00").do(weekday_evening_update)
+schedule.every().tuesday.at("20:00").do(weekday_evening_update)
+schedule.every().wednesday.at("20:00").do(weekday_evening_update)
+schedule.every().thursday.at("20:00").do(weekday_evening_update)
+schedule.every().friday.at("20:00").do(weekday_evening_update)
 
-schedule.every().monday.at("13:31").do(advance_date_job)
-schedule.every().tuesday.at("13:31").do(advance_date_job)
-schedule.every().wednesday.at("13:31").do(advance_date_job)
-schedule.every().thursday.at("13:31").do(advance_date_job)
-schedule.every().friday.at("13:31").do(advance_date_job)
+schedule.every().sunday.at("17:00").do(sunday_update)
 
-schedule.every().sunday.at("10:30").do(sunday_update)   # 5:00 PM Yangon
+schedule.every().monday.at("20:01").do(advance_date_job)
+schedule.every().tuesday.at("20:01").do(advance_date_job)
+schedule.every().wednesday.at("20:01").do(advance_date_job)
+schedule.every().thursday.at("20:01").do(advance_date_job)
+schedule.every().friday.at("20:01").do(advance_date_job)
 
 # ---------------------------
 # Main Loop
 # ---------------------------
 if __name__ == "__main__":
     print("🚀 Scheduler with GitHub sync started...")
-
-    # 🔹 Test run immediately
-    update_am_result()
-    update_pm_result()
-    weekday_evening_update()
-    sunday_update()
-    advance_date_job()
-
     while True:
         schedule.run_pending()
         time.sleep(30)
