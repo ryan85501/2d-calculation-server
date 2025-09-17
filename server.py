@@ -6,6 +6,7 @@ import subprocess
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import pytz
+import requests
 
 # ---------------------------
 # Paths & GitHub Config
@@ -56,16 +57,16 @@ def get_next_day(skip_weekends=True):
     return next_day
 
 # ---------------------------
-# Custom Calculation Methods
+# Fetch Live Data from Scraper
 # ---------------------------
-def calculate_mwe_ga_nan():
-    return [str(random.randint(0, 99)).zfill(2) for _ in range(5)]
-
-def calculate_one_chain():
-    return [str(random.randint(0, 9)) for _ in range(2)]
-
-def calculate_not_broken():
-    return [str(random.randint(0, 9)) for _ in range(3)]
+def fetch_live_results():
+    try:
+        response = requests.get("https://set-scraper-server.onrender.com/get_set_data", timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        print(f"❌ Error fetching live results: {e}")
+        return {}
 
 # ---------------------------
 # HTML Update Function
@@ -137,19 +138,21 @@ def update_html(updates=None, new_result=None, period=None, advance_date=False):
 # Scheduled Jobs
 # ---------------------------
 def update_am_result():
-    result = str(random.randint(0, 99)).zfill(2)
+    data = fetch_live_results()
+    result = data.get("AM", str(random.randint(0, 99)).zfill(2))
     update_html(new_result=result, period="am")
     print(f"✅ AM result updated: {result}")
 
 def update_pm_result():
-    result = str(random.randint(0, 99)).zfill(2)
+    data = fetch_live_results()
+    result = data.get("PM", str(random.randint(0, 99)).zfill(2))
     update_html(new_result=result, period="pm")
     print(f"✅ PM result updated: {result}")
 
 def weekday_evening_update():
     updates = {
-        "one-chain": calculate_one_chain(),
-        "not-broken": calculate_not_broken(),
+        "one-chain": [str(random.randint(0, 9)) for _ in range(2)],
+        "not-broken": [str(random.randint(0, 9)) for _ in range(3)],
         "one-kwet": "",
         "shwe-pat-tee": "",
         "punch": ""
@@ -158,7 +161,7 @@ def weekday_evening_update():
     print("🌙 Weekday evening update done.")
 
 def sunday_update():
-    updates = {"mwe-ga-nan": calculate_mwe_ga_nan()}
+    updates = {"mwe-ga-nan": [str(random.randint(0, 99)).zfill(2) for _ in range(5)]}
     update_html(updates=updates)
     print("☀️ Sunday Mwe Ga Nan updated.")
 
@@ -195,7 +198,7 @@ schedule.every().sunday.at("10:30").do(sunday_update)   # 5:00 PM Yangon
 if __name__ == "__main__":
     print("🚀 Scheduler with GitHub sync started...")
 
-    # 🔹 Test run immediately so you don’t wait
+    # 🔹 Test run immediately
     update_am_result()
     update_pm_result()
     weekday_evening_update()
