@@ -1,3 +1,10 @@
+# Ensure repo exists
+if not os.path.exists(REPO_PATH):
+    subprocess.run([
+        "git", "clone", GITHUB_URL, REPO_PATH
+    ])
+
+
 import os
 import schedule
 import time
@@ -279,3 +286,4 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(30)
+
