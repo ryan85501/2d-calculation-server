@@ -10,12 +10,6 @@ import pytz
 import requests
 
 
-# Ensure repo exists
-if not os.path.exists(REPO_PATH):
-    subprocess.run([
-        "git", "clone", GITHUB_URL, REPO_PATH
-    ])
-
 # ---------------------------
 # Paths & GitHub Config
 # ---------------------------
@@ -288,5 +282,6 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(30)
+
 
 
