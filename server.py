@@ -28,7 +28,7 @@ last_run = {"am": None, "pm": None, "weekday_8pm": None, "sunday_5pm": None, "ad
 # Git Helpers
 # ---------------------------
 def git_pull():
-    subprocess.run(["git", "pull"], cwd=REPO_PATH, check=False)
+    subprocess.run(["git", "pull", "origin", "main"], cwd=REPO_PATH, check=False)
 
 def git_push():
     subprocess.run(["git", "add", "index.html"], cwd=REPO_PATH, check=False)
@@ -235,4 +235,5 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(30)
+
 
