@@ -245,22 +245,31 @@ def recover_missed_jobs():
     if now.hour >= 16 and now.minute >= 30 and last_run["pm"] != today and weekday < 5:
         pm_result = update_pm_result()
         if weekday < 5 and now.hour >= 20 and last_run["weekday_8pm"] != today:
-            weekday_evening_update(pm_result)
+            weekday_evening_update()
 
     if weekday < 5 and now.hour >= 20 and now.minute >= 1 and last_run["advance_date"] != today:
         advance_date_job()
 
     if weekday == 6 and now.hour >= 17 and last_run["sunday_5pm"] != today:
         friday_pm = str(random.randint(0, 99)).zfill(2)
-        sunday_update(friday_pm)
+        sunday_update()
 
 # ---------------------------
 # Main Loop
 # ---------------------------
 if __name__ == "__main__":
     update_html(initial_date=True)
+    
+    # === NEW CODE: Check for missed jobs on startup ===
     print("⏰ Checking for any missed jobs on startup...")
-    recover_missed_jobs()
+    now = datetime.now(yangon_tz)
+    weekday = now.weekday()
+    
+    # Force advance date and weekday update if past their scheduled time
+    if weekday < 5 and now.hour >= 20:
+        advance_date_job()
+        weekday_evening_update()
+    
     setup_schedules()
     print("🚀 Scheduler with GitHub sync + missed recovery started...")
 
