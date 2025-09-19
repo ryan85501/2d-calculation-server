@@ -28,12 +28,32 @@ last_run = {"am": None, "pm": None, "weekday_8pm": None, "sunday_5pm": None, "ad
 # ---------------------------
 # Git Helpers
 # ---------------------------
+# ... (your imports and global variables) ...
+
+# ---------------------------
+# Git Helpers
+# ---------------------------
 def git_pull():
     try:
         subprocess.run(["git", "pull", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error during git pull: {e}")
 
+# ... (all your other functions) ...
+
+# ---------------------------
+# Main Loop
+# ---------------------------
+if __name__ == "__main__":
+    # Pull once at startup to ensure the latest version is used
+    git_pull()
+    
+    setup_schedules()
+    print("🚀 Scheduler with GitHub sync + missed recovery started...")
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 # ---------------------------
 # Git Helpers
 # ---------------------------
@@ -260,5 +280,6 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(1)
+
 
 
