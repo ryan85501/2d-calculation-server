@@ -44,7 +44,9 @@ def git_push():
         
         subprocess.run(["git", "add", "index.html"], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "commit", "-m", "Auto update index.html"], cwd=REPO_PATH, check=True)
-        subprocess.run(["git", "push", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
+        
+        # Add the --force flag to ensure the push is accepted
+        subprocess.run(["git", "push", "--force", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error during git push: {e}")
 
@@ -271,6 +273,7 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(1)
+
 
 
 
