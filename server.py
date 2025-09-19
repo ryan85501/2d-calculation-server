@@ -232,19 +232,9 @@ schedule.every(5).minutes.do(recover_missed_jobs)  # recovery check
 # ---------------------------
 if __name__ == "__main__":
     print("🚀 Scheduler with GitHub sync + missed recovery started...")
+    advance_date_job() # <--- Add this line for testing
     while True:
         schedule.run_pending()
         time.sleep(30)
-
-# Temporary test block
-print("Running manual test...")
-update_am_result()
-update_pm_result()
-print("Manual test finished.")
-
-# You can also run other functions like this:
-# weekday_evening_update("26")
-# advance_date_job()
-
 
 
