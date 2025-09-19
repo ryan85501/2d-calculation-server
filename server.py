@@ -37,8 +37,7 @@ def git_pull():
         # Use --force to discard any local changes and get a clean remote copy
         subprocess.run(["git", "pull", "--force", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error during git pull: {e}")  
-
+        print(f"Error during git pull: {e}")
 
 def git_push():
     try:
@@ -274,6 +273,7 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(1)
+
 
 
 
