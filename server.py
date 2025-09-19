@@ -31,10 +31,9 @@ last_run = {"am": None, "pm": None, "weekday_8pm": None, "sunday_5pm": None, "ad
 
 def git_pull():
     try:
-        # Step 1: Forcefully reset the local branch to match the remote
-        subprocess.run(["git", "fetch", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
-        subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=REPO_PATH, check=True)
-        print("✅ Git repository has been reset and updated.")
+        # A simple pull is enough now that the build command guarantees a clean state.
+        subprocess.run(["git", "pull", "--rebase", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
+        print("✅ Git repository updated via rebase.")
     except subprocess.CalledProcessError as e:
         print(f"Error during git pull: {e}")
 def git_push():
@@ -273,6 +272,7 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(1)
+
 
 
 
