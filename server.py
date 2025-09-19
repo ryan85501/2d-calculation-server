@@ -259,6 +259,8 @@ def recover_missed_jobs():
 # ---------------------------
 if __name__ == "__main__":
     update_html(initial_date=True)
+    print("⏰ Checking for any missed jobs on startup...")
+    recover_missed_jobs()
     setup_schedules()
     print("🚀 Scheduler with GitHub sync + missed recovery started...")
 
