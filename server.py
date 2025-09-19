@@ -15,7 +15,7 @@ HTML_FILE = os.path.join(REPO_PATH, "index.html")
 
 GITHUB_REPO = "https://github.com/ryan85501/2d-calculation-server.git"
 GITHUB_SCRIPT_REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/ryan85501/2d-calculation-server.git"
-GITHUB_USERNAME = "ryan85501"
+GITHUB_USERNAME = os.environ.get(GITHUB_USERNAME)
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "YOUR_TOKEN_HERE")  # better with env var
 GITHUB_URL = GITHUB_REPO.replace("https://", f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@")
 GITHUB_HTML_REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/ryan85501/Shwe-Pat-Tee.git" # REPLACE with your info
@@ -234,6 +234,7 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(30)
+
 
 
 
