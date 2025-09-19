@@ -6,19 +6,19 @@ import subprocess
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 import pytz
+import requests
 
 # ---------------------------
 # Repo Paths & GitHub Config
 # ---------------------------
 REPO_PATH = "/opt/render/project/src"
 HTML_FILE = os.path.join(REPO_PATH, "index.html")
-GITHUB_USERNAME = "ryan85501"
-GITHUB_REPO = "https://github.com/ryan85501/2d-calculation-server.git"
-GITHUB_SCRIPT_REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/ryan85501/2d-calculation-server.git"
 
+GITHUB_REPO = "https://github.com/ryan85501/2d-calculation-server.git"
+GITHUB_USERNAME = "ryan85501"
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "YOUR_TOKEN_HERE")  # better with env var
 GITHUB_URL = GITHUB_REPO.replace("https://", f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@")
-GITHUB_HTML_REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/ryan85501/Shwe-Pat-Tee.git" # REPLACE with your info
+
 yangon_tz = pytz.timezone("Asia/Yangon")
 
 # Track last run times
@@ -35,6 +35,9 @@ def git_push():
     subprocess.run(["git", "add", "index.html"], cwd=REPO_PATH, check=False)
     subprocess.run(["git", "commit", "-m", "Auto update index.html"], cwd=REPO_PATH, check=False)
     subprocess.run(["git", "push", GITHUB_URL, "main"], cwd=REPO_PATH, check=False)
+
+
+# ---------------------------
 # Utility
 # ---------------------------
 def load_html():
@@ -57,6 +60,15 @@ def get_next_day_str(skip_weekends=True):
     elif skip_weekends and next_day.weekday() == 6:  # Sunday
         next_day += timedelta(days=1)
     return next_day.strftime("%d-%m-%Y")
+
+def get_live_results():
+    try:
+        response = requests.get('https://set-scraper-server.onrender.com/get_set_data')
+        response.raise_for_status() # Raise an HTTPError for bad responses (4xx or 5xx)
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching live data: {e}")
+        return None
 
 
 # ---------------------------
@@ -101,8 +113,10 @@ def update_html(updates=None, new_result=None, period=None, advance_date=False):
 
         if not today_row:
             new_row = soup.new_tag("tr")
-            date_td = soup.new_tag("td"); date_td.string = today
-            am_td = soup.new_tag("td"); pm_td = soup.new_tag("td")
+            date_td = soup.new_tag("td")
+            date_td.string = today
+            am_td = soup.new_tag("td")
+            pm_td = soup.new_tag("td")
             new_row.extend([date_td, am_td, pm_td])
             history_table.insert(0, new_row)
             today_row = new_row
@@ -141,17 +155,27 @@ def update_html(updates=None, new_result=None, period=None, advance_date=False):
 # Scheduled Jobs
 # ---------------------------
 def update_am_result():
-    result = str(random.randint(0, 99)).zfill(2)
-    update_html(new_result=result, period="am")
-    last_run["am"] = get_today_str()
-    print(f"✅ AM result updated: {result}")
+    data = get_live_results()
+    if data and "live_am_result" in data:
+        result = data["live_am_result"]
+        update_html(new_result=result, period="am")
+        last_run["am"] = get_today_str()
+        print(f"✅ AM result updated: {result}")
+    else:
+        print("❌ Failed to get live AM result.")
+
 
 def update_pm_result():
-    result = str(random.randint(0, 99)).zfill(2)
-    update_html(new_result=result, period="pm")
-    last_run["pm"] = get_today_str()
-    print(f"✅ PM result updated: {result}")
-    return result
+    data = get_live_results()
+    if data and "live_pm_result" in data:
+        result = data["live_pm_result"]
+        update_html(new_result=result, period="pm")
+        last_run["pm"] = get_today_str()
+        print(f"✅ PM result updated: {result}")
+        return result
+    else:
+        print("❌ Failed to get live PM result.")
+        return None
 
 def weekday_evening_update(pm_result):
     updates = {
@@ -230,15 +254,6 @@ schedule.every(5).minutes.do(recover_missed_jobs)  # recovery check
 # ---------------------------
 if __name__ == "__main__":
     print("🚀 Scheduler with GitHub sync + missed recovery started...")
-    advance_date_job() # <--- Add this line for testing
     while True:
         schedule.run_pending()
         time.sleep(30)
-
-
-
-
-
-
-
-
