@@ -12,7 +12,7 @@ import requests
 # Repo Paths & GitHub Config
 # ---------------------------
 # Render mounts the repository at /opt/render/project/src
-REPO_PATH = "/opt/render/project/src"
+REPO_PATH = "/opt/render/project/src/shwe-pat-tee"
 HTML_FILE = os.path.join(REPO_PATH, "index.html")
 
 GITHUB_REPO = "https://github.com/ryan85501/Shwe-Pat-Tee.git"
@@ -28,24 +28,17 @@ last_run = {"am": None, "pm": None, "weekday_8pm": None, "sunday_5pm": None, "ad
 # ---------------------------
 # Git Helpers
 # ---------------------------
-
-def git_pull():
-    try:
-        # A simple pull is enough now that the build command guarantees a clean state.
-        subprocess.run(["git", "pull", "--rebase", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
-        print("✅ Git repository updated via rebase.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error during git pull: {e}")
 def git_push():
     try:
-        subprocess.run(["git", "config", "user.email", "ryan85501@gmail.com"], cwd=REPO_PATH, check=True)
-        subprocess.run(["git", "config", "user.name", "ryan85501"], cwd=REPO_PATH, check=True)
+        subprocess.run(["git", "config", "--global", "user.email", "ryan85501@gmail.com"], check=True)
+        subprocess.run(["git", "config", "--global", "user.name", "ryan85501"], check=True)
         
-        subprocess.run(["git", "add", "index.html"], cwd=REPO_PATH, check=True)
+        subprocess.run(["git", "add", "."], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "commit", "-m", "Auto update index.html"], cwd=REPO_PATH, check=True)
         
-        # Add the --force flag to ensure the push is accepted
+        # Use --force to ensure the push is accepted
         subprocess.run(["git", "push", "--force", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
+        print("✅ Git push successful.")
     except subprocess.CalledProcessError as e:
         print(f"Error during git push: {e}")
 
@@ -105,6 +98,7 @@ def calculate_not_broken(pm_result):
 # HTML Update
 # ---------------------------
 def update_html(updates=None, new_result=None, period=None, advance_date=False, initial_date=False):
+    # This will now load the file from the shwe-pat-tee subdirectory
     soup = load_html()
 
     if initial_date:
@@ -264,7 +258,6 @@ def recover_missed_jobs():
 # Main Loop
 # ---------------------------
 if __name__ == "__main__":
-    git_pull()
     update_html(initial_date=True)
     setup_schedules()
     print("🚀 Scheduler with GitHub sync + missed recovery started...")
@@ -272,10 +265,3 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(1)
-
-
-
-
-
-
-
