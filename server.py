@@ -15,7 +15,7 @@ import requests
 REPO_PATH = "/opt/render/project/src"
 HTML_FILE = os.path.join(REPO_PATH, "index.html")
 
-GITHUB_REPO = "https://github.com/ryan85501/2d-calculation-server.git"
+GITHUB_REPO = "https://github.com/ryan85501/Shwe-Pat-Tee.git"
 GITHUB_USERNAME = "ryan85501"
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_URL = GITHUB_REPO.replace("https://", f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@")
@@ -268,3 +268,4 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(1)
+
