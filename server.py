@@ -239,6 +239,18 @@ def recover_missed_jobs():
 if __name__ == "__main__":
     setup_schedules()
     print("🚀 Scheduler with GitHub sync + missed recovery started...")
+       # === TEMPORARY TEST CODE ===
+    print("--- Running immediate test updates... ---")
+    update_am_result()
+    # The weekday_evening_update needs a PM result, so let's call that next
+    update_pm_result()
+    weekday_evening_update()
+    sunday_update() # This will run a Sunday update regardless of the day
+    advance_date_job()
+    print("--- Immediate test updates complete. ---")
+    # ============================
+
     while True:
         schedule.run_pending()
         time.sleep(1)
+
