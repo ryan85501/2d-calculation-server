@@ -1,0 +1,11 @@
+# A `render.yaml` file should be located at the root of your repository.
+services:
+  - type: worker
+    name: 2d-calculation-server
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "python server.py"
+    autoDeploy: true
+    envVars:
+      - key: GITHUB_TOKEN
+        sync: false
