@@ -12,12 +12,12 @@ import requests
 # Repo Paths & GitHub Config
 # ---------------------------
 # Render mounts the repository at /opt/render/project/src
-REPO_PATH = "/opt/render/project/src" 
+REPO_PATH = "/opt/render/project/src"
 HTML_FILE = os.path.join(REPO_PATH, "index.html")
 
 GITHUB_REPO = "https://github.com/ryan85501/2d-calculation-server.git"
 GITHUB_USERNAME = "ryan85501"
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN") 
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
 GITHUB_URL = GITHUB_REPO.replace("https://", f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@")
 
 yangon_tz = pytz.timezone("Asia/Yangon")
@@ -100,8 +100,15 @@ def calculate_not_broken(pm_result):
 # ---------------------------
 # HTML Update
 # ---------------------------
-def update_html(updates=None, new_result=None, period=None, advance_date=False):
+def update_html(updates=None, new_result=None, period=None, advance_date=False, initial_date=False):
     soup = load_html()
+
+    if initial_date:
+        date_span = soup.select_one("#current-date")
+        if date_span:
+            today_date = get_today_str()
+            day_of_week = datetime.strptime(today_date, "%d-%m-%Y").strftime("%A")
+            date_span.string = f"{today_date} - {day_of_week}"
 
     if updates:
         for key, value in updates.items():
@@ -254,6 +261,7 @@ def recover_missed_jobs():
 # ---------------------------
 if __name__ == "__main__":
     git_pull()
+    update_html(initial_date=True)
     setup_schedules()
     print("🚀 Scheduler with GitHub sync + missed recovery started...")
 
