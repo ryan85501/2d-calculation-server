@@ -235,5 +235,11 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(30)
+# Temporary code to test the update functions
+if __name__ == "__main__":
+    print("Running a manual test...")
+    update_am_result()
+    update_pm_result()
+    print("Manual test complete.")
 
 
