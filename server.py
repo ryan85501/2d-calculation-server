@@ -17,7 +17,7 @@ HTML_FILE = os.path.join(REPO_PATH, "index.html")
 
 GITHUB_REPO = "https://github.com/ryan85501/2d-calculation-server.git"
 GITHUB_USERNAME = "ryan85501"
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN") # Use environment variable for security
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN") 
 GITHUB_URL = GITHUB_REPO.replace("https://", f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@")
 
 yangon_tz = pytz.timezone("Asia/Yangon")
@@ -28,47 +28,23 @@ last_run = {"am": None, "pm": None, "weekday_8pm": None, "sunday_5pm": None, "ad
 # ---------------------------
 # Git Helpers
 # ---------------------------
-# ... (your imports and global variables) ...
-
-# ---------------------------
-# Git Helpers
-# ---------------------------
 def git_pull():
     try:
         subprocess.run(["git", "pull", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error during git pull: {e}")
 
-# ... (all your other functions) ...
-
-# ---------------------------
-# Main Loop
-# ---------------------------
-if __name__ == "__main__":
-    # Pull once at startup to ensure the latest version is used
-    git_pull()
-    
-    setup_schedules()
-    print("🚀 Scheduler with GitHub sync + missed recovery started...")
-
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
-# ---------------------------
-# Git Helpers
-# ---------------------------
 def git_push():
     try:
-        # Explicitly configure user identity for this process
         subprocess.run(["git", "config", "user.email", "ryan85501@gmail.com"], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "config", "user.name", "ryan85501"], cwd=REPO_PATH, check=True)
         
-        # Now, proceed with the commit and push
         subprocess.run(["git", "add", "index.html"], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "commit", "-m", "Auto update index.html"], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "push", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error during git push: {e}")
+
 # ---------------------------
 # Utility
 # ---------------------------
@@ -87,9 +63,9 @@ def get_today_str():
 def get_next_day_str(skip_weekends=True):
     now = datetime.now(yangon_tz)
     next_day = now + timedelta(days=1)
-    if skip_weekends and next_day.weekday() == 5:  # Saturday
+    if skip_weekends and next_day.weekday() == 5:
         next_day += timedelta(days=2)
-    elif skip_weekends and next_day.weekday() == 6:  # Sunday
+    elif skip_weekends and next_day.weekday() == 6:
         next_day += timedelta(days=1)
     return next_day.strftime("%d-%m-%Y")
 
@@ -125,7 +101,6 @@ def calculate_not_broken(pm_result):
 # HTML Update
 # ---------------------------
 def update_html(updates=None, new_result=None, period=None, advance_date=False):
-    git_pull()
     soup = load_html()
 
     if updates:
@@ -207,7 +182,6 @@ def update_pm_result():
         return None
 
 def weekday_evening_update():
-    # Fetch today's PM result from the HTML
     soup = load_html()
     history_table = soup.select_one("#history-table-body")
     today = get_today_str()
@@ -225,8 +199,7 @@ def weekday_evening_update():
         print("❌ Could not find today's PM result to perform evening update.")
 
 def sunday_update():
-    # Logic to retrieve Friday's PM result
-    friday_pm = "45" # Placeholder, implement logic to find a Friday's result from history
+    friday_pm = "45"
     updates = {"mwe-ga-nan": calculate_mwe_ga_nan(friday_pm)}
     update_html(updates=updates)
     last_run["sunday_5pm"] = get_today_str()
@@ -257,29 +230,33 @@ def setup_schedules():
     schedule.every(5).minutes.do(recover_missed_jobs)
 
 def recover_missed_jobs():
-    # ... (Keep this function as is)
-    pass
+    now = datetime.now(yangon_tz)
+    today = get_today_str()
+    weekday = now.weekday()
+
+    if now.hour >= 12 and last_run["am"] != today and weekday < 5:
+        update_am_result()
+
+    if now.hour >= 16 and now.minute >= 30 and last_run["pm"] != today and weekday < 5:
+        pm_result = update_pm_result()
+        if weekday < 5 and now.hour >= 20 and last_run["weekday_8pm"] != today:
+            weekday_evening_update(pm_result)
+
+    if weekday < 5 and now.hour >= 20 and now.minute >= 1 and last_run["advance_date"] != today:
+        advance_date_job()
+
+    if weekday == 6 and now.hour >= 17 and last_run["sunday_5pm"] != today:
+        friday_pm = str(random.randint(0, 99)).zfill(2)
+        sunday_update(friday_pm)
 
 # ---------------------------
 # Main Loop
 # ---------------------------
 if __name__ == "__main__":
+    git_pull()
     setup_schedules()
     print("🚀 Scheduler with GitHub sync + missed recovery started...")
-       # === TEMPORARY TEST CODE ===
-    print("--- Running immediate test updates... ---")
-    update_am_result()
-    # The weekday_evening_update needs a PM result, so let's call that next
-    update_pm_result()
-    weekday_evening_update()
-    sunday_update() # This will run a Sunday update regardless of the day
-    advance_date_job()
-    print("--- Immediate test updates complete. ---")
-    # ============================
 
     while True:
         schedule.run_pending()
         time.sleep(1)
-
-
-
