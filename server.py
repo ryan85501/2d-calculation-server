@@ -29,12 +29,17 @@ last_run = {"am": None, "pm": None, "weekday_8pm": None, "sunday_5pm": None, "ad
 # Git Helpers
 # ---------------------------
 
+# ---------------------------
+# Git Helpers
+# ---------------------------
 def git_pull():
     try:
-        # Add the --rebase flag to automatically reconcile divergent branches
-        subprocess.run(["git", "pull", "--rebase", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
+        # Use --force to discard any local changes and get a clean remote copy
+        subprocess.run(["git", "pull", "--force", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error during git pull: {e}")
+        print(f"Error during git pull: {e}")  
+
+
 def git_push():
     try:
         subprocess.run(["git", "config", "user.email", "ryan85501@gmail.com"], cwd=REPO_PATH, check=True)
@@ -269,5 +274,6 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(1)
+
 
 
