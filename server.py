@@ -14,10 +14,11 @@ REPO_PATH = "/opt/render/project/src"
 HTML_FILE = os.path.join(REPO_PATH, "index.html")
 
 GITHUB_REPO = "https://github.com/ryan85501/2d-calculation-server.git"
+GITHUB_SCRIPT_REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/ryan85501/2d-calculation-server.git"
 GITHUB_USERNAME = "ryan85501"
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "YOUR_TOKEN_HERE")  # better with env var
 GITHUB_URL = GITHUB_REPO.replace("https://", f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@")
-
+GITHUB_HTML_REPO_URL = f"https://{GITHUB_USERNAME}:{GITHUB_TOKEN}@github.com/ryan85501/Shwe-Pat-Tee.git" # REPLACE with your info
 yangon_tz = pytz.timezone("Asia/Yangon")
 
 # Track last run times
@@ -28,13 +29,12 @@ last_run = {"am": None, "pm": None, "weekday_8pm": None, "sunday_5pm": None, "ad
 # Git Helpers
 # ---------------------------
 def git_pull():
-    subprocess.run(["git", "pull", "origin", "main"], cwd=REPO_PATH, check=False)
+    subprocess.run(["git", "pull", GITHUB_URL, "main"], cwd=REPO_PATH, check=False)
 
 def git_push():
     subprocess.run(["git", "add", "index.html"], cwd=REPO_PATH, check=False)
     subprocess.run(["git", "commit", "-m", "Auto update index.html"], cwd=REPO_PATH, check=False)
     subprocess.run(["git", "push", GITHUB_URL, "main"], cwd=REPO_PATH, check=False)
-
 # ---------------------------
 # Utility
 # ---------------------------
@@ -235,6 +235,7 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(30)
+
 
 
 
