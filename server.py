@@ -33,8 +33,7 @@ def git_pull():
 def git_push():
     subprocess.run(["git", "add", "index.html"], cwd=REPO_PATH, check=False)
     subprocess.run(["git", "commit", "-m", "Auto update index.html"], cwd=REPO_PATH, check=False)
-    subprocess.run(["git", "push"], cwd=REPO_PATH, check=False)
-
+    subprocess.run(["git", "push", GITHUB_URL, "main"], cwd=REPO_PATH, check=False)
 
 # ---------------------------
 # Utility
@@ -236,5 +235,6 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(30)
+
 
 
