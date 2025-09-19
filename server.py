@@ -34,14 +34,21 @@ def git_pull():
     except subprocess.CalledProcessError as e:
         print(f"Error during git pull: {e}")
 
+# ---------------------------
+# Git Helpers
+# ---------------------------
 def git_push():
     try:
+        # Explicitly configure user identity for this process
+        subprocess.run(["git", "config", "user.email", "ryan85501@gmail.com"], cwd=REPO_PATH, check=True)
+        subprocess.run(["git", "config", "user.name", "ryan85501"], cwd=REPO_PATH, check=True)
+        
+        # Now, proceed with the commit and push
         subprocess.run(["git", "add", "index.html"], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "commit", "-m", "Auto update index.html"], cwd=REPO_PATH, check=True)
         subprocess.run(["git", "push", GITHUB_URL, "main"], cwd=REPO_PATH, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error during git push: {e}")
-
 # ---------------------------
 # Utility
 # ---------------------------
@@ -253,4 +260,5 @@ if __name__ == "__main__":
     while True:
         schedule.run_pending()
         time.sleep(1)
+
 
